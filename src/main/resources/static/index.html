@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fake GPS Map & Logs</title>
+    <title>BPMNEnv Aware</title>
     <meta charset="utf-8" />
 
     <!-- Leaflet CSS -->
@@ -34,7 +34,7 @@
 
     <!-- Colonna log -->
     <div class="col-md-5">
-        <h2 class="my-4">Fake GPS Sender & Maps</h2>
+        <h2 class="my-4">Client application</h2>
         <button class="btn btn-success btn-custom" onclick="startProcess()">Start BPMN Process</button>
         <button class="btn btn-primary btn-custom" onclick="startSending()">Start GPS</button>
         <button class="btn btn-danger btn-custom" onclick="resetAll()">Reset</button>
@@ -84,14 +84,12 @@
         if(inside) map.fitBounds(polygon.getBounds());
     }
 
-
-
     function startSending() {
         fetch("http://localhos" +
             "t:8081/api/gps/start", { method: "POST" })
             .then(() => {
-                gpsInterval = setInterval(fetchGpsAndUpdate, 1000);
-                console.log("GPS sending started")
+                gpsInterval = setInterval(fetchGpsAndUpdate, 320);
+                console.log("GPS sending started");
             })
             .catch(err => console.error("Failed to start GPS", err));
     }
@@ -104,7 +102,7 @@
             .then((res) => {
 
                 processIdElement.textContent = "- PID: " + res.pid;
-                logInterval = setInterval(fetchLogs, 10);
+                logInterval = setInterval(fetchLogs, 250);
                 console.log("Process started")
             } )
             .catch(err => console.error("Failed to start process", err));
@@ -162,6 +160,8 @@
     let logInterval = null;
     let gpsInterval = null;
 
+    var isInside = false;
+
 
     function fetchGpsAndUpdate() {
         fetch("http://localhost:8081/api/gps/current")
@@ -171,12 +171,15 @@
                     updateMarker(data.lat, data.lon, data.inside);
                 }
 
-                if (data.inside) {
-                    clearInterval(logInterval);
-                    clearInterval(gpsInterval);
-                }
+                isInside = data.inside;
             })
             .catch(err => console.error("Failed to fetch current GPS", err));
+
+        if(isInside){
+            console.log("Clear interval")
+            clearInterval(gpsInterval);
+            clearInterval(logInterval);
+        }
     }
 
 
